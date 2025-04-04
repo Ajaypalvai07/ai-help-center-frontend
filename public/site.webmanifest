@@ -1,0 +1,19 @@
+{
+  "name": "Ajay AI Help Centre",
+  "short_name": "AI Help",
+  "icons": [
+    {
+      "src": "/jpeg-optimizer_my pass photo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/jpeg-optimizer_my pass photo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+} 
