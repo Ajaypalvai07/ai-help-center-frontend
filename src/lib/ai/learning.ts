@@ -2,23 +2,12 @@ import type { Message } from '../../types';
 import api from '../api';
 import { aiService } from './index';
 
-interface UserPreferences {
-  category?: string;
-  language?: string;
-  theme?: string;
-}
-
 interface FeedbackData {
   rating: number;
   comment?: string;
   messageId: string;
   resolved?: boolean;
   feedback?: string;
-}
-
-interface AnalysisContext {
-  previousMessages: Message[];
-  userPreferences: UserPreferences;
 }
 
 export interface AnalysisResponse {

@@ -6,7 +6,6 @@ import {
   Shield,
   Zap,
   Users,
-  Bot,
   ArrowRight,
   MessageCircle,
   ChevronDown,
