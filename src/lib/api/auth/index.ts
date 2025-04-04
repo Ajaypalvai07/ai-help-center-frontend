@@ -16,7 +16,7 @@ export interface AuthResponse {
 }
 
 const authApi = axios.create({
-  baseURL: `${config.apiUrl}/auth`,
+  baseURL: config.apiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,14 +33,14 @@ authApi.interceptors.request.use((config) => {
 
 export const auth = {
   login: async (email: string, password: string) => {
-    return authApi.post<AuthResponse>('/login', { email, password });
+    return authApi.post<AuthResponse>('/auth/login', { email, password });
   },
 
   verify: async () => {
-    return authApi.get<{ user: AuthResponse['user'] }>('/verify');
+    return authApi.get<{ user: AuthResponse['user'] }>('/auth/verify');
   },
 
   logout: async () => {
-    return authApi.post('/logout');
+    return authApi.post('/auth/logout');
   },
 }; 
