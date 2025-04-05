@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,14 +9,25 @@
     <meta name="description" content="AI-powered help center by Ajay Palvai" />
     <meta name="author" content="Ajay Palvai" />
     <meta name="theme-color" content="#ffffff" />
+    <base href="/" />
     <title>Ajay AI Help Centre</title>
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:title" content="Ajay AI Help Centre" />
     <meta property="og:description" content="AI-powered help center by Ajay Palvai" />
     <meta property="og:image" content="/jpeg-optimizer_my pass photo.jpg" />
+    <!-- Error handling -->
+    <script>
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
