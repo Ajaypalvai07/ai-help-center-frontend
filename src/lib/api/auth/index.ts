@@ -103,7 +103,7 @@ class AuthService implements AuthMethods {
       
       console.log('Attempting login with:', { email });
       
-      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+      const response = await this.api.post<AuthResponse>('/api/v1/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -154,11 +154,11 @@ class AuthService implements AuthMethods {
       };
 
       console.log('Sending registration request:', {
-        url: `${config.apiUrl}/auth/register`,
+        url: `${config.apiUrl}/api/v1/auth/register`,
         data: { ...userData, password: '***' }
       });
 
-      const response = await this.api.post<AuthResponse>('/auth/register', userData);
+      const response = await this.api.post<AuthResponse>('/api/v1/auth/register', userData);
       
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
@@ -194,7 +194,7 @@ class AuthService implements AuthMethods {
       
       console.log('Attempting admin login with:', { email });
       
-      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+      const response = await this.api.post<AuthResponse>('/api/v1/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -228,13 +228,13 @@ class AuthService implements AuthMethods {
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
-    return this.api.get<{ user: AuthResponse['user'] }>('/auth/verify');
+    return this.api.get<{ user: AuthResponse['user'] }>('/api/v1/auth/verify');
   }
 
   async logout(): Promise<AxiosResponse<void>> {
     localStorage.removeItem('token');
     console.log('Token removed from storage');
-    return this.api.post<void>('/auth/logout');
+    return this.api.post<void>('/api/v1/auth/logout');
   }
 }
 
