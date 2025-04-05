@@ -67,10 +67,13 @@ export default function App() {
                 }
               />
               
-              {/* Root Route */}
-              <Route path="/" element={
-                isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/auth/login" />
-              } />
+              {/* Root Route - Show Layout for authenticated users, otherwise show home page */}
+              <Route 
+                path="/" 
+                element={
+                  <Layout />
+                }
+              />
 
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" />} />
