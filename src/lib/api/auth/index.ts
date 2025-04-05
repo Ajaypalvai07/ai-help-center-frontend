@@ -1,4 +1,4 @@
-import axios, { AxiosResponse, AxiosInstance } from 'axios';
+import axios, { AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import { config } from '../../../config';
 
 // Types
@@ -48,9 +48,10 @@ class AuthService implements AuthMethods {
       headers: {
         'Content-Type': 'application/json',
       },
+      timeout: 10000,
+      validateStatus: (status) => status < 500,
     });
 
-    // Add token to requests if it exists
     this.api.interceptors.request.use((config) => {
       const token = localStorage.getItem('token');
       if (token) {
@@ -58,28 +59,62 @@ class AuthService implements AuthMethods {
       }
       return config;
     });
+
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => {
+        console.error('Auth API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            headers: error.config?.headers,
+          }
+        });
+        return Promise.reject(error);
+      }
+    );
   }
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
-    
-    return this.api.post<AuthResponse>('/auth/token', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+      
+      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      
+      return response;
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error('Invalid email or password');
+      }
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      throw new Error(error.response?.data?.detail || 'Login failed');
+    }
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
     try {
-      // Ensure password meets minimum length requirement
       if (password.length < 8) {
         throw new Error('Password must be at least 8 characters long');
       }
 
-      // Match the UserCreate model from the backend
+      if (name.length < 2) {
+        throw new Error('Name must be at least 2 characters long');
+      }
+
       const userData = {
         email,
         password,
@@ -88,23 +123,35 @@ class AuthService implements AuthMethods {
         role: "user"
       };
 
+      console.log('Sending registration request:', {
+        url: `${config.apiUrl}/api/v1/auth/register`,
+        data: { ...userData, password: '***' }
+      });
+
       const response = await this.api.post<AuthResponse>('/auth/register', userData);
       
-      // Store token if available
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
       }
       
       return response;
     } catch (error: any) {
-      // Handle specific error cases
+      console.error('Registration error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
       if (error.response?.status === 400) {
         throw new Error(error.response.data.detail || 'Invalid registration data');
       }
       if (error.response?.status === 500) {
-        throw new Error('Server error during registration. Please try again.');
+        throw new Error('Server error during registration. Please try again later.');
       }
-      throw error;
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Connection timeout. Please check your internet connection.');
+      }
+      throw new Error(error.response?.data?.detail || 'Registration failed');
     }
   }
 
