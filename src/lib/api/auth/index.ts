@@ -44,7 +44,7 @@ class AuthService implements AuthMethods {
 
   constructor() {
     this.api = axios.create({
-      baseURL: `${config.apiUrl}/auth`,
+      baseURL: `${config.apiUrl}/api/v1`,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -61,24 +61,50 @@ class AuthService implements AuthMethods {
   }
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    return this.api.post<AuthResponse>('/login', { email, password });
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+    
+    return this.api.post<AuthResponse>('/auth/token', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
-    return this.api.post<AuthResponse>('/register', { email, password, name });
+    return this.api.post<AuthResponse>('/auth/register', {
+      email,
+      password,
+      name,
+    });
   }
 
   async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    return this.api.post<AuthResponse>('/admin/login', { email, password });
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+    
+    return this.api.post<AuthResponse>('/auth/token', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    }).then(async (response) => {
+      // Verify if the user is an admin
+      if (response.data.user.role !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+      }
+      return response;
+    });
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
-    return this.api.get<{ user: AuthResponse['user'] }>('/verify');
+    return this.api.get<{ user: AuthResponse['user'] }>('/auth/verify');
   }
 
   async logout(): Promise<AxiosResponse<void>> {
     localStorage.removeItem('token');
-    return this.api.post<void>('/logout');
+    return this.api.post<void>('/auth/logout');
   }
 }
 
