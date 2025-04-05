@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useStore } from '../../store';
-import { Lock, ArrowLeft, Shield, Eye, EyeOff } from 'lucide-react';
+import { useStore } from '../../store/useStore';
+import { auth } from '../../lib/api/auth';
 
 interface AuthError {
   message: string;
@@ -10,15 +9,12 @@ interface AuthError {
 }
 
 export default function AdminLogin() {
-  const navigate = useNavigate();
-  const { login } = useStore();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<AuthError | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,178 +22,91 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await login(formData.email, formData.password);
-      
-      if (!response.user) {
-        throw new Error('Invalid response: missing user data');
+      const response = await auth.login(email, password);
+      const { access_token, user } = response.data;
+
+      if (user.role !== 'admin') {
+        throw new Error('Unauthorized: Admin access only');
       }
 
-      if (response.user.role !== 'admin') {
-        setError({ message: 'Access denied. Admin privileges required.' });
-        return;
-      }
-      
-      // Navigate to admin dashboard
-      navigate('/admin', { replace: true });
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setError({
-        message: error.message || 'Failed to login. Please check your credentials.',
-        status: error.response?.status
-      });
+      localStorage.setItem('token', access_token);
+      setUser(user);
+      navigate('/admin');
+    } catch (err: any) {
+      console.error('Admin login error:', err);
+      setError(err.response?.data?.detail || err.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-        <div className="absolute inset-0 bg-[length:30px_30px] [background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)]" />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 0.9, 1],
-            x: [0, 30, -20, 0],
-            y: [0, -50, 20, 0]
-          }}
-          transition={{
-            duration: 7,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-        />
-
-<div className="absolute top-4 right-4 bg-white p-3 rounded-lg border border-gray-300 shadow-lg">
-  <h3 className="text-black font-medium mb-1 text-xs">Demo Credentials</h3>
-  <div className="text-black font-mono text-xs">
-    <div>Email: admin@example.com</div>
-    <div>Password: admin123</div>
-  </div>
-</div>
-
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 0.9, 1],
-            x: [0, 30, -20, 0],
-            y: [0, -50, 20, 0]
-          }}
-          transition={{
-            duration: 7,
-            repeat: Infinity,
-            ease: "linear",
-            delay: 2
-          }}
-          className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-        />
-      </div>
-
-      {/* Form Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative max-w-md w-full mx-4"
-      >
-        {/* Back Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/')}
-          className="absolute -top-12 left-0 text-white flex items-center space-x-2 hover:text-blue-200 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to home</span>
-        </motion.button>
-
-        {/* Glass Card */}
-        <div className="backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-2xl border border-white/20">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Shield className="h-12 w-12 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+            Admin Login
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email-address" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 focus:z-10 sm:text-sm bg-white dark:bg-gray-700"
+                placeholder="Admin email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Admin Login</h2>
-            <p className="text-blue-100">
-              Secure access for administrators only
-            </p>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 focus:z-10 sm:text-sm bg-white dark:bg-gray-700"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/20 border border-red-500/50 text-white p-3 rounded-lg text-sm text-center backdrop-blur-sm"
-              >
-                {error.message}
-              </motion.div>
-            )}
-
-            <div className="space-y-4">
-              <div className="relative">
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  className="pl-4 w-full bg-white/10 border border-white/20 text-white placeholder-blue-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                  placeholder="Admin Email"
-                />
-              </div>
-
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-100" />
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 w-full bg-white/10 border border-white/20 text-white placeholder-blue-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                  placeholder="Password"
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-100 hover:text-blue-200 transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
+          {error && (
+            <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                    {error}
+                  </h3>
+                </div>
               </div>
             </div>
+          )}
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          <div>
+            <button
               type="submit"
               disabled={loading}
-              className="relative w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg py-2.5 px-4 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800 disabled:opacity-50"
             >
-              <span className="relative z-10 flex items-center justify-center">
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  'Access Admin Panel'
-                )}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
-          </form>
-        </div>
-      </motion.div>
+              {loading ? 'Please wait...' : 'Sign in as Admin'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 } 

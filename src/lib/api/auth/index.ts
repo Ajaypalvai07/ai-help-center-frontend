@@ -21,10 +21,13 @@ export interface AuthResponse {
   };
 }
 
-// Create axios instance with base URL
+// Create axios instance with base URL and CORS credentials
 const authApi = axios.create({
-  baseURL: `${config.apiUrl}`,
+  baseURL: config.apiUrl,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }
 });
 
 // Add auth token to requests if available
@@ -44,14 +47,25 @@ export const auth = {
       formData.append('username', email); // OAuth2 expects 'username' field
       formData.append('password', password);
 
-      const response = await authApi.post<AuthResponse>('/auth/token', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
+      const response = await authApi.post<AuthResponse>('/auth/token', formData);
       return response;
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  },
+
+  register: async (email: string, password: string, name: string) => {
+    try {
+      const response = await authApi.post<AuthResponse>('/auth/register', {
+        email,
+        password,
+        name,
+        role: 'user'
+      });
+      return response;
+    } catch (error) {
+      console.error('Registration error:', error);
       throw error;
     }
   },
@@ -61,6 +75,7 @@ export const auth = {
   },
 
   logout: async () => {
+    localStorage.removeItem('token');
     return authApi.post('/auth/logout');
   },
 }; 
