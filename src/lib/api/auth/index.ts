@@ -44,7 +44,7 @@ class AuthService implements AuthMethods {
 
   constructor() {
     this.api = axios.create({
-      baseURL: `${config.apiUrl}/api/v1`,
+      baseURL: config.apiUrl,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -52,7 +52,14 @@ class AuthService implements AuthMethods {
       validateStatus: (status) => status < 500,
     });
 
+    // Add request interceptor for debugging
     this.api.interceptors.request.use((config) => {
+      console.log('Making request to:', config.url, {
+        method: config.method,
+        headers: config.headers,
+        data: config.data
+      });
+      
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -60,13 +67,24 @@ class AuthService implements AuthMethods {
       return config;
     });
 
+    // Add response interceptor for debugging
     this.api.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('Received response:', {
+          url: response.config.url,
+          status: response.status,
+          data: response.data
+        });
+        return response;
+      },
       (error: AxiosError) => {
         console.error('Auth API Error:', {
+          url: error.config?.url,
           status: error.response?.status,
           data: error.response?.data,
+          message: error.message,
           config: {
+            baseURL: error.config?.baseURL,
             url: error.config?.url,
             method: error.config?.method,
             headers: error.config?.headers,
@@ -83,6 +101,8 @@ class AuthService implements AuthMethods {
       formData.append('username', email);
       formData.append('password', password);
       
+      console.log('Attempting login with:', { email });
+      
       const response = await this.api.post<AuthResponse>('/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -91,15 +111,25 @@ class AuthService implements AuthMethods {
       
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
+        console.log('Login successful, token stored');
       }
       
       return response;
     } catch (error: any) {
+      console.error('Login error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
       if (error.response?.status === 401) {
         throw new Error('Invalid email or password');
       }
       if (error.response?.status === 500) {
         throw new Error('Server error. Please try again later.');
+      }
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Connection timeout. Please check your internet connection.');
       }
       throw new Error(error.response?.data?.detail || 'Login failed');
     }
@@ -124,7 +154,7 @@ class AuthService implements AuthMethods {
       };
 
       console.log('Sending registration request:', {
-        url: `${config.apiUrl}/api/v1/auth/register`,
+        url: `${config.apiUrl}/auth/register`,
         data: { ...userData, password: '***' }
       });
 
@@ -132,6 +162,7 @@ class AuthService implements AuthMethods {
       
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
+        console.log('Registration successful, token stored');
       }
       
       return response;
@@ -161,6 +192,8 @@ class AuthService implements AuthMethods {
       formData.append('username', email);
       formData.append('password', password);
       
+      console.log('Attempting admin login with:', { email });
+      
       const response = await this.api.post<AuthResponse>('/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -171,16 +204,26 @@ class AuthService implements AuthMethods {
         throw new Error('Unauthorized: Admin access required');
       }
 
-      if (response.data && response.data.token) {
+      if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
+        console.log('Admin login successful, token stored');
       }
 
       return response;
     } catch (error: any) {
-      if (error.response?.data?.detail) {
-        throw new Error(error.response.data.detail);
+      console.error('Admin login error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Invalid admin credentials');
       }
-      throw error;
+      if (error.response?.status === 500) {
+        throw new Error('Server error during admin login. Please try again later.');
+      }
+      throw new Error(error.response?.data?.detail || 'Admin login failed');
     }
   }
 
@@ -190,10 +233,11 @@ class AuthService implements AuthMethods {
 
   async logout(): Promise<AxiosResponse<void>> {
     localStorage.removeItem('token');
+    console.log('Token removed from storage');
     return this.api.post<void>('/auth/logout');
   }
 }
 
 // Export the singleton instance
 const authService = new AuthService();
-export const auth = authService as unknown as AuthMethods; 
+export const auth = authService as AuthMethods; 
