@@ -8,7 +8,8 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
+  access_token: string;
+  token_type: string;
   user: {
     id: string;
     email: string;
@@ -45,196 +46,141 @@ class AuthService implements AuthMethods {
   constructor() {
     this.api = axios.create({
       baseURL: config.apiUrl,
+      timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      timeout: 10000,
-      validateStatus: (status) => status < 500,
+      validateStatus: (status) => status < 500
     });
 
-    // Add request interceptor for debugging
-    this.api.interceptors.request.use((config) => {
-      console.log('Making request to:', config.url, {
-        method: config.method,
-        headers: config.headers,
-        data: config.data
-      });
-      
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Request interceptor
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        console.log('Making request to:', config.url, config);
+        return config;
+      },
+      (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
       }
-      return config;
-    });
+    );
 
-    // Add response interceptor for debugging
+    // Response interceptor
     this.api.interceptors.response.use(
       (response) => {
-        console.log('Received response:', {
-          url: response.config.url,
-          status: response.status,
-          data: response.data
-        });
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/auth/login';
+        }
         return response;
       },
       (error: AxiosError) => {
-        console.error('Auth API Error:', {
-          url: error.config?.url,
-          status: error.response?.status,
-          data: error.response?.data,
+        console.error('Auth API Error:', error);
+        if (error.response?.status === 500) {
+          return Promise.reject({
+            status: 500,
+            message: 'Internal server error. Please try again later.',
+            data: error.response.data
+          });
+        }
+        return Promise.reject({
+          status: error.response?.status || 500,
           message: error.message,
-          config: {
-            baseURL: error.config?.baseURL,
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers,
-          }
+          data: error.response?.data
         });
-        return Promise.reject(error);
       }
     );
   }
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
     try {
+      console.log('Attempting login with:', { email });
       const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
-      
-      console.log('Attempting login with:', { email });
-      
-      const response = await this.api.post<AuthResponse>('/api/v1/auth/token', formData, {
+
+      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
-      
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('Login successful, token stored');
-      }
-      
-      return response;
-    } catch (error: any) {
-      console.error('Login error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
-      if (error.response?.status === 401) {
-        throw new Error('Invalid email or password');
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
       }
-      if (error.response?.status === 500) {
-        throw new Error('Server error. Please try again later.');
-      }
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('Connection timeout. Please check your internet connection.');
-      }
-      throw new Error(error.response?.data?.detail || 'Login failed');
+
+      return response;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
     try {
-      if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
-      }
+      console.log('Sending registration request:', {
+        url: `${config.apiUrl}/auth/register`,
+        data: { email, password: '***', name, is_active: true, role: 'user' }
+      });
 
-      if (name.length < 2) {
-        throw new Error('Name must be at least 2 characters long');
-      }
-
-      const userData = {
+      const response = await this.api.post<AuthResponse>('/auth/register', {
         email,
         password,
         name,
         is_active: true,
-        role: "user"
-      };
-
-      console.log('Sending registration request:', {
-        url: `${config.apiUrl}/api/v1/auth/register`,
-        data: { ...userData, password: '***' }
+        role: 'user'
       });
 
-      const response = await this.api.post<AuthResponse>('/api/v1/auth/register', userData);
-      
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('Registration successful, token stored');
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
       }
-      
+
       return response;
-    } catch (error: any) {
-      console.error('Registration error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-
-      if (error.response?.status === 400) {
-        throw new Error(error.response.data.detail || 'Invalid registration data');
-      }
-      if (error.response?.status === 500) {
-        throw new Error('Server error during registration. Please try again later.');
-      }
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('Connection timeout. Please check your internet connection.');
-      }
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
   }
 
   async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
     try {
+      console.log('Attempting admin login with:', { email });
       const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
-      
-      console.log('Attempting admin login with:', { email });
-      
-      const response = await this.api.post<AuthResponse>('/api/v1/auth/token', formData, {
+
+      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
-      if (response.data?.user?.role !== 'admin') {
-        throw new Error('Unauthorized: Admin access required');
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
       }
 
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('Admin login successful, token stored');
+      if (response.data.user.role !== 'admin') {
+        throw new Error('User is not an admin');
       }
 
       return response;
-    } catch (error: any) {
-      console.error('Admin login error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-
-      if (error.response?.status === 401) {
-        throw new Error('Invalid admin credentials');
-      }
-      if (error.response?.status === 500) {
-        throw new Error('Server error during admin login. Please try again later.');
-      }
-      throw new Error(error.response?.data?.detail || 'Admin login failed');
+    } catch (error) {
+      console.error('Admin login error:', error);
+      throw error;
     }
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
-    return this.api.get<{ user: AuthResponse['user'] }>('/api/v1/auth/verify');
+    return this.api.get('/auth/verify');
   }
 
-  async logout(): Promise<AxiosResponse<void>> {
+  async logout(): Promise<void> {
     localStorage.removeItem('token');
-    console.log('Token removed from storage');
-    return this.api.post<void>('/api/v1/auth/logout');
   }
 }
 
