@@ -5,6 +5,7 @@ import { SignupForm } from './components/Auth/SignupForm';
 import { AuthProvider } from './hooks/useAuth';
 import { useAppStore } from './store/useStore';
 import Layout from './components/Layout';
+import HomePage from './components/HomePage';
 import SessionCheck from './components/SessionCheck';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -67,11 +68,11 @@ export default function App() {
                 }
               />
               
-              {/* Root Route - Show Layout for authenticated users, otherwise show home page */}
+              {/* Root Route - Show HomePage for non-authenticated users */}
               <Route 
                 path="/" 
                 element={
-                  <Layout />
+                  isAuthenticated ? <Navigate to="/dashboard" /> : <HomePage />
                 }
               />
 
