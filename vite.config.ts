@@ -33,13 +33,8 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+    minify: 'esbuild',
+    target: 'esnext'
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', '@mui/material'],
