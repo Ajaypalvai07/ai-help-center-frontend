@@ -11,7 +11,7 @@ export interface AppUser {
   preferences: Record<string, any>;
 }
 
-interface AppState {
+export interface AppState {
   user: AppUser | null;
   isAuthenticated: boolean;
   lastActivity: Date | null;
@@ -20,7 +20,7 @@ interface AppState {
   updateLastActivity: () => void;
 }
 
-const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set) => ({
   user: null,
   isAuthenticated: false,
   lastActivity: null,
@@ -28,5 +28,3 @@ const useAppStore = create<AppState>((set) => ({
   clearUser: () => set({ user: null, isAuthenticated: false }),
   updateLastActivity: () => set({ lastActivity: new Date() }),
 }));
-
-export { useAppStore };

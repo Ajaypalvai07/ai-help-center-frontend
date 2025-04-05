@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, CircularProgress, Alert } from '@mui/material';
-import { useAppStore } from '../store/useStore';
-import { Message } from '../types';
+import { Box, TextField, Button, CircularProgress, Alert } from '@mui/material';
 
 interface ChatInterfaceProps {
   onSendMessage: (message: string) => Promise<void>;
@@ -11,7 +9,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSendMessage }) =
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAppStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

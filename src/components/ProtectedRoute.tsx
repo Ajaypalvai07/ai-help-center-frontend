@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useStore } from '../store';
+import { useAppStore } from '../store/useStore';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -8,14 +8,14 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
-  const { auth: { user } } = useStore();
+  const { user, isAuthenticated } = useAppStore();
   
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/auth/login" />;
   }
   
   if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/aihelpcentre" />;
+    return <Navigate to="/dashboard" />;
   }
   
   return <>{children}</>;

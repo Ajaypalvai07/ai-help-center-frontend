@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { useStore } from '../store/useStore';
+import { useAppStore } from '../store/useStore';
 import type { Message } from '../types';
 import { chat } from '../lib/api';
 
 export function useAIChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const addMessage = useStore((state) => state.addMessage);
+  const { user } = useAppStore();
 
   const sendMessage = useCallback(async (content: string, category?: string) => {
     setLoading(true);
@@ -26,10 +26,9 @@ export function useAIChat() {
         timestamp: new Date().toISOString(),
         type: response.data.message.type || 'text',
         category: category,
-        userId: 'assistant'
+        userId: user?.id
       };
 
-      addMessage(message);
       return message;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get AI response';
@@ -38,7 +37,7 @@ export function useAIChat() {
     } finally {
       setLoading(false);
     }
-  }, [addMessage]);
+  }, [user]);
 
   return {
     loading,

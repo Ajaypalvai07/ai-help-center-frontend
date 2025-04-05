@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Grid, Paper } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 import { useAppStore } from '../../store/useStore';
 
 interface DashboardMetric {
