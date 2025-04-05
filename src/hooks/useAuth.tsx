@@ -35,13 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     auth.logout();
     clearUser();
-    navigate('/login');
+    navigate('/');
   }, [clearUser, navigate]);
 
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      signOut();
+      clearUser();
       return;
     }
 
@@ -53,9 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.data.user);
     } catch (error) {
       console.error('Auth check error:', error);
-      signOut();
+      clearUser();
     }
-  }, [setUser, signOut]);
+  }, [setUser, clearUser]);
 
   return (
     <AuthContext.Provider value={{ login, signOut, checkAuth }}>
