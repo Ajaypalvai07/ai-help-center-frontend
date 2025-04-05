@@ -73,29 +73,68 @@ class AuthService implements AuthMethods {
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
-    return this.api.post<AuthResponse>('/auth/register', {
-      email,
-      password,
-      name,
-    });
+    try {
+      // Ensure password meets minimum length requirement
+      if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+
+      // Match the UserCreate model from the backend
+      const userData = {
+        email,
+        password,
+        name,
+        is_active: true,
+        role: "user"
+      };
+
+      const response = await this.api.post<AuthResponse>('/auth/register', userData);
+      
+      // Store token if available
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      
+      return response;
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.detail || 'Invalid registration data');
+      }
+      if (error.response?.status === 500) {
+        throw new Error('Server error during registration. Please try again.');
+      }
+      throw error;
+    }
   }
 
   async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
-    
-    return this.api.post<AuthResponse>('/auth/token', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    }).then(async (response) => {
-      // Verify if the user is an admin
-      if (response.data.user.role !== 'admin') {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+      
+      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+
+      if (response.data?.user?.role !== 'admin') {
         throw new Error('Unauthorized: Admin access required');
       }
+
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+
       return response;
-    });
+    } catch (error: any) {
+      if (error.response?.data?.detail) {
+        throw new Error(error.response.data.detail);
+      }
+      throw error;
+    }
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
