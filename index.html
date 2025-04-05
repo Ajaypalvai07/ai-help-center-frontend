@@ -16,15 +16,6 @@
     <meta property="og:image" content="/jpeg-optimizer_my pass photo.jpg" />
     <!-- Error handling -->
     <script>
-      // Handle route redirects for SPA
-      (function() {
-        const path = window.location.pathname;
-        const publicPaths = ['/login', '/signup', '/auth', '/dashboard'];
-        if (path !== '/' && !publicPaths.some(p => path.startsWith(p))) {
-          window.location.href = '/';
-        }
-      })();
-      // Error handling
       window.addEventListener('error', function(e) {
         console.error('Global error:', e);
       });

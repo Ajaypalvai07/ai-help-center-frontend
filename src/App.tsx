@@ -28,16 +28,24 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
 }
 
 export default function App() {
+  const { isAuthenticated } = useAppStore();
+
   return (
     <ErrorBoundary>
       <Router>
         <AuthProvider>
           <SessionCheck>
             <Routes>
-              {/* Auth Routes */}
-              <Route path="/auth/login" element={<LoginForm />} />
-              <Route path="/auth/signup" element={<SignupForm />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
+              {/* Public Routes */}
+              <Route path="/auth/login" element={
+                isAuthenticated ? <Navigate to="/dashboard" /> : <LoginForm />
+              } />
+              <Route path="/auth/signup" element={
+                isAuthenticated ? <Navigate to="/dashboard" /> : <SignupForm />
+              } />
+              <Route path="/admin/login" element={
+                isAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminLogin />
+              } />
               
               {/* Protected Routes */}
               <Route
@@ -59,8 +67,13 @@ export default function App() {
                 }
               />
               
-              {/* Default Route */}
-              <Route path="/" element={<Navigate to="/dashboard" />} />
+              {/* Root Route */}
+              <Route path="/" element={
+                isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/auth/login" />
+              } />
+
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </SessionCheck>
         </AuthProvider>
