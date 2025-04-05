@@ -12,16 +12,17 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   adminOnly?: boolean;
+  requireAuth?: boolean;
 }
 
-function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+function ProtectedRoute({ children, adminOnly = false, requireAuth = true }: ProtectedRouteProps) {
   const { user, isAuthenticated } = useAppStore();
   
-  if (!isAuthenticated || !user) {
+  if (requireAuth && (!isAuthenticated || !user)) {
     return <Navigate to="/auth/login" />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
+  if (adminOnly && (!user || user.role !== 'admin')) {
     return <Navigate to="/dashboard" />;
   }
 
