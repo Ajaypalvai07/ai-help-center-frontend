@@ -7,24 +7,27 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
+  access_token: string;
+  token_type: string;
   user: {
     id: string;
     email: string;
+    name: string;
     role: string;
+    is_active: boolean;
+    created_at: string;
+    last_login: string | null;
+    preferences: Record<string, any>;
   };
 }
 
+// Create axios instance with base URL
 const authApi = axios.create({
-  baseURL: `${config.apiUrl}/api/v1`,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  withCredentials: true
+  baseURL: `${config.apiUrl}`,
+  withCredentials: true,
 });
 
-// Add token to requests if it exists
+// Add auth token to requests if available
 authApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -36,7 +39,16 @@ authApi.interceptors.request.use((config) => {
 export const auth = {
   login: async (email: string, password: string) => {
     try {
-      const response = await authApi.post<AuthResponse>('/auth/login', { email, password });
+      // Create form data as expected by OAuth2PasswordRequestForm
+      const formData = new URLSearchParams();
+      formData.append('username', email); // OAuth2 expects 'username' field
+      formData.append('password', password);
+
+      const response = await authApi.post<AuthResponse>('/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
       return response;
     } catch (error) {
       console.error('Login error:', error);
