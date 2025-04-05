@@ -19,6 +19,7 @@ const authApi = axios.create({
   baseURL: `${config.apiUrl}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
   withCredentials: true
 });
@@ -34,7 +35,13 @@ authApi.interceptors.request.use((config) => {
 
 export const auth = {
   login: async (email: string, password: string) => {
-    return authApi.post<AuthResponse>('/auth/login', { email, password });
+    try {
+      const response = await authApi.post<AuthResponse>('/auth/login', { email, password });
+      return response;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   },
 
   verify: async () => {
