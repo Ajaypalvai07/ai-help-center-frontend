@@ -1,93 +1,70 @@
-import { ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from './components/HomePage';
-import CategorySelector from './components/CategorySelector';
-import Chat from './components/Chat';
 import { LoginForm } from './components/Auth/LoginForm';
 import { AdminLogin } from './components/Admin/AdminLogin';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import { useStore } from './store';
+import { SignupForm } from './components/Auth/SignupForm';
 import { AuthProvider } from './hooks/useAuth';
+import { useAppStore } from './store/useStore';
 import Layout from './components/Layout';
 import SessionCheck from './components/SessionCheck';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
   adminOnly?: boolean;
 }
 
 function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
-  const { auth: { user } } = useStore();
+  const { user, isAuthenticated } = useAppStore();
   
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/auth/login" />;
   }
-  
+
   if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/aihelpcentre" />;
+    return <Navigate to="/dashboard" />;
   }
-  
+
   return <>{children}</>;
 }
 
-function App() {
+export default function App() {
   return (
     <ErrorBoundary>
       <Router>
         <AuthProvider>
-          <SessionCheck />
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            
-            {/* Auth Routes */}
-            <Route path="/auth/login" element={<LoginForm />} />
-            <Route path="/auth/signup" element={<LoginForm isSignup />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            
-            {/* Protected Routes */}
-            <Route
-              path="/aihelpcentre"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CategorySelector />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/chat/:categoryId"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Chat />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute adminOnly>
-                  <Layout>
-                    <AdminDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          <SessionCheck>
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/auth/login" element={<LoginForm />} />
+              <Route path="/auth/signup" element={<SignupForm />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              
+              {/* Protected Routes */}
+              <Route
+                path="/dashboard/*"
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Admin Routes */}
+              <Route
+                path="/admin/dashboard/*"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Default Route */}
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+            </Routes>
+          </SessionCheck>
         </AuthProvider>
       </Router>
     </ErrorBoundary>
   );
 }
-
-export default App;

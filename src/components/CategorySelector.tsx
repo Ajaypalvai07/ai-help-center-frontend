@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../lib/api';
-import { useStore } from '../store';
+import { useAppStore } from '../store/useStore';
 import type { Category } from '../types';
 import { MessageSquare, Code, Box, User, Loader2 } from 'lucide-react';
+import { Button, Typography } from '@mui/material';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'General': <MessageSquare className="w-6 h-6" />,
@@ -40,7 +41,7 @@ export default function CategorySelector() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { auth: { user } } = useStore();
+  const { user } = useAppStore();
 
   useEffect(() => {
     loadCategories();
@@ -91,26 +92,21 @@ export default function CategorySelector() {
           const icon = categoryIcons[category.name];
 
           return (
-            <div
+            <Button
               key={category.id}
+              variant="outlined"
               onClick={() => navigate(`/chat/${category.id}`)}
-              className={`transform transition-all duration-300 hover:scale-105 cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl ${colorScheme.bg} ${colorScheme.hover}`}
+              sx={{ p: 2, height: '100%', textAlign: 'left', ...colorScheme }}
             >
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
-                    {icon}
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">
+              <Box>
+                <Typography variant="subtitle1" gutterBottom>
                   {category.name}
-                </h3>
-                <p className={`${colorScheme.text} text-sm opacity-90`}>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   {category.description}
-                </p>
-              </div>
-              <div className="h-2 w-full bg-white/20" />
-            </div>
+                </Typography>
+              </Box>
+            </Button>
           );
         })}
       </div>

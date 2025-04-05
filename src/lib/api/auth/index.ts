@@ -27,7 +27,7 @@ export interface AuthMethods {
   register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>>;
   adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
   verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>>;
-  logout(): Promise<AxiosResponse<void>>;
+  logout(): Promise<void>;
 }
 
 // Define the auth service interface
@@ -36,7 +36,7 @@ export interface IAuthService {
   register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>>;
   adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
   verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>>;
-  logout(): Promise<AxiosResponse<void>>;
+  logout(): Promise<void>;
 }
 
 // Implement the auth service
@@ -50,8 +50,7 @@ class AuthService implements AuthMethods {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      },
-      validateStatus: (status) => status < 500
+      }
     });
 
     // Request interceptor

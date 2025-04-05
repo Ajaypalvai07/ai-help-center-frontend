@@ -1,8 +1,7 @@
 import { createContext, useContext, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../lib/api/auth';
-import { useStore } from '../store/useStore';
-import type { AuthResponse } from '../lib/api/auth';
+import { auth, type AuthResponse } from '../lib/api/auth';
+import { useAppStore } from '../store/useStore';
 
 interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthResponse>;
@@ -14,19 +13,19 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { setUser, clearUser } = useStore();
+  const { setUser, clearUser } = useAppStore();
 
   const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await auth.login(email, password);
-      if (!response?.data?.token || !response?.data?.user) {
+      if (!response?.data?.access_token || !response?.data?.user) {
         throw new Error('Invalid response from server');
       }
       
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
+      const { access_token, user } = response.data;
+      localStorage.setItem('token', access_token);
       setUser(user);
-      return { token, user };
+      return response.data;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -34,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setUser]);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem('token');
+    auth.logout();
     clearUser();
     navigate('/login');
   }, [clearUser, navigate]);

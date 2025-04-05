@@ -1,63 +1,16 @@
-import { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
+import React, { useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+interface SessionCheckProps {
+  children: React.ReactNode;
+}
 
-export default function SessionCheck() {
-  const navigate = useNavigate();
-  const { auth, signOut, updateLastActivity, initializeAuth } = useStore();
+export default function SessionCheck({ children }: SessionCheckProps) {
+  const { checkAuth } = useAuth();
 
-  const checkSession = useCallback(() => {
-    if (!auth.lastActivity) return;
-    
-    const lastActivityTime = new Date(auth.lastActivity).getTime();
-    const timeSinceLastActivity = Date.now() - lastActivityTime;
-    
-    if (timeSinceLastActivity > SESSION_TIMEOUT) {
-      signOut();
-      navigate('/', { replace: true });
-    }
-  }, [signOut, navigate, auth.lastActivity]);
-
-  const handleActivity = useCallback(() => {
-    if (auth.isAuthenticated) {
-      updateLastActivity();
-    }
-  }, [auth.isAuthenticated, updateLastActivity]);
-
-  // Initialize auth state
   useEffect(() => {
-    initializeAuth().catch(error => {
-      console.error('Failed to initialize auth:', error);
-      navigate('/', { replace: true });
-    });
-  }, [initializeAuth, navigate]);
+    checkAuth();
+  }, [checkAuth]);
 
-  // Set up session checking
-  useEffect(() => {
-    if (!auth.isAuthenticated) return;
-
-    // Initial session check
-    checkSession();
-
-    // Set up interval for checking session
-    const intervalId = setInterval(checkSession, 60000);
-
-    // Set up event listeners for user activity
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(event => {
-      window.addEventListener(event, handleActivity);
-    });
-
-    // Cleanup
-    return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, handleActivity);
-      });
-      clearInterval(intervalId);
-    };
-  }, [auth.isAuthenticated, checkSession, handleActivity]);
-
-  return null;
+  return <>{children}</>;
 } 
