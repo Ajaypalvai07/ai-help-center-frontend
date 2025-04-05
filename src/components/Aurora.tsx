@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function Aurora() {
+export default function SimpleAurora() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {/* Gradient blobs */}

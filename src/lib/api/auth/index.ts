@@ -1,14 +1,14 @@
-import axios from 'axios';
+import axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { config } from '../../../config';
 
+// Types
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
 export interface AuthResponse {
-  access_token: string;
-  token_type: string;
+  token: string;
   user: {
     id: string;
     email: string;
@@ -21,61 +21,67 @@ export interface AuthResponse {
   };
 }
 
-// Create axios instance with base URL and CORS credentials
-const authApi = axios.create({
-  baseURL: config.apiUrl,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+export interface AuthMethods {
+  login(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
+  register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>>;
+  adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
+  verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>>;
+  logout(): Promise<AxiosResponse<void>>;
+}
+
+// Define the auth service interface
+export interface IAuthService {
+  login(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
+  register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>>;
+  adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>>;
+  verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>>;
+  logout(): Promise<AxiosResponse<void>>;
+}
+
+// Implement the auth service
+class AuthService implements AuthMethods {
+  private readonly api: AxiosInstance;
+
+  constructor() {
+    this.api = axios.create({
+      baseURL: `${config.apiUrl}/auth`,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add token to requests if it exists
+    this.api.interceptors.request.use((config) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
   }
-});
 
-// Add auth token to requests if available
-authApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
+    return this.api.post<AuthResponse>('/login', { email, password });
   }
-  return config;
-});
 
-export const auth = {
-  login: async (email: string, password: string) => {
-    try {
-      // Create form data as expected by OAuth2PasswordRequestForm
-      const formData = new URLSearchParams();
-      formData.append('username', email); // OAuth2 expects 'username' field
-      formData.append('password', password);
+  async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
+    return this.api.post<AuthResponse>('/register', { email, password, name });
+  }
 
-      const response = await authApi.post<AuthResponse>('/auth/token', formData);
-      return response;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  },
+  async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
+    return this.api.post<AuthResponse>('/admin/login', { email, password });
+  }
 
-  register: async (email: string, password: string, name: string) => {
-    try {
-      const response = await authApi.post<AuthResponse>('/auth/register', {
-        email,
-        password,
-        name,
-        role: 'user'
-      });
-      return response;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  },
+  async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
+    return this.api.get<{ user: AuthResponse['user'] }>('/verify');
+  }
 
-  verify: async () => {
-    return authApi.get<{ user: AuthResponse['user'] }>('/auth/verify');
-  },
-
-  logout: async () => {
+  async logout(): Promise<AxiosResponse<void>> {
     localStorage.removeItem('token');
-    return authApi.post('/auth/logout');
-  },
-}; 
+    return this.api.post<void>('/logout');
+  }
+}
+
+// Export the singleton instance
+const authService = new AuthService();
+export const auth = authService as unknown as AuthMethods; 

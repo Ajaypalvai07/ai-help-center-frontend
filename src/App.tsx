@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import HomePage from './components/HomePage';
 import CategorySelector from './components/CategorySelector';
 import Chat from './components/Chat';
-import LoginForm from './components/Auth/LoginForm';
-import AdminLogin from './components/Admin/AdminLogin';
+import { LoginForm } from './components/Auth/LoginForm';
+import { AdminLogin } from './components/Admin/AdminLogin';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import { useStore } from './store';
 import { AuthProvider } from './hooks/useAuth';

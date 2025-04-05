@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AdminMetrics, AdminUser, AdminRole, SystemLog,  User, MessageResponse, UploadResponse, AnalysisResponse } from '../types';
 
+
 // API Response Types
 interface ApiResponse<T> {
   data: T;
@@ -159,7 +160,6 @@ const apiObject = {
   feedback: extendedApi.feedback
 };
 
-export const auth = extendedApi.auth;
 export const chat = extendedApi.chat;
 export const admin = extendedApi.admin;
 export const categories = extendedApi.categories;
