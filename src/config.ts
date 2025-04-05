@@ -3,7 +3,7 @@ export const config = {
   dbName: import.meta.env.VITE_DB_NAME || 'ai_help_center',
   jwtSecret: import.meta.env.VITE_JWT_SECRET || 'your-secret-key',
   jwtExpiresIn: '24h',
-  apiUrl: (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1',
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   huggingFaceApiKey: import.meta.env.VITE_HUGGINGFACE_API_KEY,
   huggingFaceModel: import.meta.env.VITE_HUGGINGFACE_MODEL || 'google/flan-t5-base',
   sentryDsn: import.meta.env.VITE_SENTRY_DSN,

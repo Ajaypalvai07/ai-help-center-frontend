@@ -16,7 +16,7 @@ export interface AuthResponse {
 }
 
 const authApi = axios.create({
-  baseURL: config.apiUrl,
+  baseURL: `${config.apiUrl}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
