@@ -177,7 +177,7 @@ export const AdminLoginForm: React.FC = () => {
             </motion.button>
 
             <div className="text-center mt-4">
-              <a href="/login" className="text-purple-200 hover:text-white transition-colors">
+              <a href="auth/login" className="text-purple-200 hover:text-white transition-colors">
                 Regular user? Sign in here
               </a>
             </div>
