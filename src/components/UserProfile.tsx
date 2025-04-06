@@ -32,7 +32,7 @@ export const UserProfile: React.FC = () => {
       </Typography>
       
       <Typography variant="body2" color="text.secondary">
-        Member since: {new Date(user.created_at).toLocaleDateString()}
+        Member since: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
       </Typography>
       
       <Button

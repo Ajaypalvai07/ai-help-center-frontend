@@ -1,7 +1,7 @@
 import { createContext, useContext, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/api/auth';
-import type { AuthResponse, User } from '../lib/api/auth';
+import type { AuthResponse } from '../lib/api/auth';
 import { useAppStore } from '../store/useStore';
 
 interface AuthContextType {
