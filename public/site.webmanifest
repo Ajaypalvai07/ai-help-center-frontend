@@ -2,15 +2,16 @@
   "name": "AI Help Center",
   "short_name": "AI Help",
   "description": "AI-powered help center by Ajay Palvai",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "icons": [
     {
-      "src": "/jpeg-optimizer_my pass photo.jpg",
+      "src": "./jpeg-optimizer_my pass photo.jpg",
       "sizes": "192x192",
       "type": "image/jpeg"
     },
     {
-      "src": "/jpeg-optimizer_my pass photo.jpg",
+      "src": "./jpeg-optimizer_my pass photo.jpg",
       "sizes": "512x512",
       "type": "image/jpeg"
     }

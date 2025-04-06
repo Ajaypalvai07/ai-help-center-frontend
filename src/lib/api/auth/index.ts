@@ -51,7 +51,8 @@ class AuthService implements AuthMethods {
     // Log API configuration
     if (this.debug) {
       console.log('🔧 Auth Service Configuration:', {
-        baseURL: this.baseURL
+        baseURL: this.baseURL,
+        mode: import.meta.env.MODE
       });
     }
 
@@ -59,11 +60,17 @@ class AuthService implements AuthMethods {
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      withCredentials: true
     });
 
     // Add request interceptor for debugging
     this.api.interceptors.request.use((config) => {
+      // Add CORS headers
+      config.headers['Access-Control-Allow-Origin'] = '*';
+      config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS';
+      config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+      
       if (this.debug) {
         console.log('🚀 Auth Request:', {
           method: config.method,
@@ -98,10 +105,17 @@ class AuthService implements AuthMethods {
               method: error.config?.method,
               url: error.config?.url,
               baseURL: error.config?.baseURL,
-              data: error.config?.data
+              data: error.config?.data,
+              headers: error.config?.headers
             }
           });
         }
+        
+        // Handle specific error cases
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+        }
+        
         throw error;
       }
     );
