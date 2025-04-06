@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginForm } from './components/Auth/LoginForm';
-import { AdminLogin } from './components/Admin/AdminLogin';
+import { AdminLoginForm } from './components/Auth/AdminLoginForm';
 import { SignupForm } from './components/Auth/SignupForm';
 import { AuthProvider } from './hooks/useAuth';
 import { useAppStore } from './store/useStore';
@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import HomePage from './components/HomePage';
 import SessionCheck from './components/SessionCheck';
 import { ErrorBoundary } from './components/ErrorBoundary';
+// import { AdminLoginForm } from './components/Auth/AdminLoginForm';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,7 +47,7 @@ export default function App() {
                 isAuthenticated ? <Navigate to="/dashboard" /> : <SignupForm />
               } />
               <Route path="/admin/login" element={
-                isAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminLogin />
+                isAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminLoginForm />
               } />
               
               {/* Protected Routes */}
