@@ -154,10 +154,23 @@ class AuthService implements AuthMethods {
     }
 
     try {
-      const response = await this.api.post('/auth/register', {
-        email,
+      // Validate input
+      if (!email || !password || !name) {
+        throw new Error('Email, password, and name are required');
+      }
+
+      // Create the request payload
+      const payload = {
+        email: email.toLowerCase().trim(),
         password,
-        name
+        name: name.trim()
+      };
+
+      const response = await this.api.post('/auth/register', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
       
       if (this.debug) {
@@ -172,8 +185,20 @@ class AuthService implements AuthMethods {
       }
       
       return response;
-    } catch (error) {
-      console.error('🚫 Registration failed:', error);
+    } catch (error: any) {
+      console.error('🚫 Registration failed:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.detail || 'Invalid registration data');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error during registration. Please try again later.');
+      }
+      
       throw error;
     }
   }
