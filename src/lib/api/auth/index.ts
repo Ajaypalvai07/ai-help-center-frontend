@@ -45,201 +45,186 @@ class AuthService implements AuthMethods {
   private readonly debug: boolean;
 
   constructor() {
-    this.debug = import.meta.env.MODE === 'development';
+    this.debug = import.meta.env.DEV || import.meta.env.VITE_DEBUG === 'true';
+    
+    // Log API configuration
+    if (this.debug) {
+      console.log('🔧 Auth Service Configuration:', {
+        apiUrl: import.meta.env.VITE_API_URL,
+        baseURL: `${import.meta.env.VITE_API_URL}/api/v1`
+      });
+    }
+
     this.api = axios.create({
-      baseURL: config.apiUrl,
-      timeout: 10000,
+      baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Content-Type': 'application/json'
       }
     });
 
-    // Request interceptor
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        if (this.debug) {
-          console.log('🚀 API Request:', {
-            method: config.method?.toUpperCase(),
-            url: config.url,
-            data: config.data,
-            headers: config.headers,
-          });
-        }
-        return config;
-      },
-      (error) => {
-        if (this.debug) {
-          console.error('❌ API Error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            config: {
-              method: error.config?.method?.toUpperCase(),
-              url: error.config?.url,
-              data: error.config?.data,
-            },
-          });
-        }
-        return Promise.reject(error);
+    // Add request interceptor for debugging
+    this.api.interceptors.request.use((config) => {
+      if (this.debug) {
+        console.log('🚀 Auth Request:', {
+          method: config.method,
+          url: config.url,
+          data: config.data,
+          headers: config.headers
+        });
       }
-    );
+      return config;
+    });
 
-    // Response interceptor
+    // Add response interceptor for debugging
     this.api.interceptors.response.use(
       (response) => {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/auth/login';
-        }
         if (this.debug) {
-          console.log('✅ API Response:', {
+          console.log('✅ Auth Response:', {
             status: response.status,
             data: response.data,
+            headers: response.headers
           });
         }
         return response;
       },
-      (error: AxiosError) => {
+      (error) => {
         if (this.debug) {
-          console.error('🚫 API Error:', {
+          console.error('❌ Auth Error:', {
             message: error.message,
-            response: error.response?.data,
             status: error.response?.status,
+            data: error.response?.data,
             config: {
-              method: error.config?.method?.toUpperCase(),
+              method: error.config?.method,
               url: error.config?.url,
-              data: error.config?.data,
-            },
+              data: error.config?.data
+            }
           });
         }
-        if (error.response?.status === 500) {
-          return Promise.reject({
-            status: 500,
-            message: 'Internal server error. Please try again later.',
-            data: error.response.data
-          });
-        }
-        return Promise.reject({
-          status: error.response?.status || 500,
-          message: error.message,
-          data: error.response?.data
-        });
+        throw error;
       }
     );
   }
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    try {
-      if (this.debug) console.log('📝 Login attempt:', { email });
-      
-      const formData = new URLSearchParams();
-      formData.append('username', email);
-      formData.append('password', password);
+    if (this.debug) {
+      console.log('📝 Login attempt:', { email });
+    }
+    
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
 
-      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+    try {
+      const response = await this.api.post('/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-
-      if (this.debug) console.log('🔑 Login successful:', { user: response.data.user });
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-      }
-      return response;
-    } catch (error: any) {
+      
       if (this.debug) {
-        console.error('🚫 Login failed:', {
-          error: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+        console.log('🔑 Login successful:', {
+          userId: response.data.user.id,
+          role: response.data.user.role
         });
       }
+      
+      return response;
+    } catch (error) {
+      console.error('🚫 Login failed:', error);
       throw error;
     }
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
-    try {
-      if (this.debug) console.log('📝 Registration attempt:', { email, name });
+    if (this.debug) {
+      console.log('📝 Registration attempt:', { email, name });
+    }
 
-      const response = await this.api.post<AuthResponse>('/auth/register', {
+    try {
+      const response = await this.api.post('/auth/register', {
         email,
         password,
-        name,
-        is_active: true,
-        role: 'user'
+        name
       });
-
-      if (this.debug) console.log('✨ Registration successful:', { user: response.data.user });
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-      }
-      return response;
-    } catch (error: any) {
+      
       if (this.debug) {
-        console.error('🚫 Registration failed:', {
-          error: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+        console.log('✨ Registration successful:', {
+          userId: response.data.user.id,
+          role: response.data.user.role
         });
       }
+      
+      return response;
+    } catch (error) {
+      console.error('🚫 Registration failed:', error);
       throw error;
     }
   }
 
   async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
+    if (this.debug) {
+      console.log('👑 Admin login attempt:', { email });
+    }
+
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+
     try {
-      if (this.debug) console.log('👑 Admin login attempt:', { email });
-
-      const formData = new URLSearchParams();
-      formData.append('username', email);
-      formData.append('password', password);
-
-      const response = await this.api.post<AuthResponse>('/auth/admin/token', formData, {
+      const response = await this.api.post('/auth/admin/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-
-      if (this.debug) console.log('👑 Admin login successful:', { user: response.data.user });
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-      }
-      if (response.data.user.role !== 'admin') {
-        throw new Error('User is not an admin');
-      }
-      return response;
-    } catch (error: any) {
+      
       if (this.debug) {
-        console.error('🚫 Admin login failed:', {
-          error: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+        console.log('👑 Admin login successful:', {
+          userId: response.data.user.id,
+          role: response.data.user.role
         });
       }
+      
+      return response;
+    } catch (error) {
+      console.error('🚫 Admin login failed:', error);
       throw error;
     }
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
-    const token = localStorage.getItem('token');
-    return this.api.get('/auth/verify', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (this.debug) {
+      console.log('🔍 Verifying token');
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await this.api.get('/auth/verify', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (this.debug) {
+        console.log('✅ Token verification successful:', {
+          userId: response.data.user.id,
+          role: response.data.user.role
+        });
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('🚫 Token verification failed:', error);
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
-    if (this.debug) console.log('👋 Logging out');
+    if (this.debug) {
+      console.log('👋 Logging out');
+    }
     localStorage.removeItem('token');
   }
 }
 
-// Export the singleton instance
-const authService = new AuthService();
-export const auth = authService as AuthMethods; 
+// Export singleton instance
+export const auth = new AuthService(); 
