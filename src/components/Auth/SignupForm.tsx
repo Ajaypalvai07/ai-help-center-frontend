@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { auth } from '../../lib/api/auth';
 import { useAppStore } from '../../store/useStore';
@@ -190,10 +190,13 @@ export const SignupForm: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
 
-            <div className="text-center mt-4">
-              <a href="/login" className="text-emerald-200 hover:text-white transition-colors">
+            <div className="text-center mt-4 space-y-2">
+              <Link to="/login" className="block text-emerald-200 hover:text-white transition-colors">
                 Already have an account? Sign in
-              </a>
+              </Link>
+              <Link to="/admin/login" className="block text-emerald-200 hover:text-white transition-colors">
+                Admin? Sign in here
+              </Link>
             </div>
           </form>
         </div>

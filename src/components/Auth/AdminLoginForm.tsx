@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { auth } from '../../lib/api/auth';
 import { useAppStore } from '../../store/useStore';
-import { Lock, ArrowLeft, LogIn, Eye, EyeOff, Mail } from 'lucide-react';
+import { Lock, ArrowLeft, Shield, Eye, EyeOff, Mail } from 'lucide-react';
 
 interface AuthError {
   message: string;
   status?: number;
 }
 
-export const LoginForm: React.FC = () => {
+export const AdminLoginForm: React.FC = () => {
   const navigate = useNavigate();
   const { setUser } = useAppStore();
   const [formData, setFormData] = useState({
@@ -27,11 +27,11 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await auth.login(formData.email, formData.password);
+      const response = await auth.adminLogin(formData.email, formData.password);
       setUser(response.data.user);
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('Admin login error:', err);
       setError({
         message: err.message || 'Failed to login. Please check your credentials.',
         status: err.response?.status
@@ -44,7 +44,7 @@ export const LoginForm: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-500">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-500">
         <div className="absolute inset-0 bg-[length:30px_30px] [background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)]" />
         <motion.div 
           animate={{ 
@@ -57,7 +57,7 @@ export const LoginForm: React.FC = () => {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute top-0 left-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
+          className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
         />
         <motion.div 
           animate={{ 
@@ -71,7 +71,7 @@ export const LoginForm: React.FC = () => {
             ease: "linear",
             delay: 2
           }}
-          className="absolute top-0 right-0 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
+          className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
         />
       </div>
 
@@ -87,7 +87,7 @@ export const LoginForm: React.FC = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/')}
-          className="absolute -top-12 left-0 text-white flex items-center space-x-2 hover:text-emerald-200 transition-colors"
+          className="absolute -top-12 left-0 text-white flex items-center space-x-2 hover:text-purple-200 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to home</span>
@@ -97,11 +97,11 @@ export const LoginForm: React.FC = () => {
         <div className="backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-2xl border border-white/20">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <LogIn className="h-12 w-12 text-white" />
+              <Shield className="h-12 w-12 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-emerald-100">
-              Sign in to your account
+            <h2 className="text-3xl font-bold text-white mb-2">Admin Login</h2>
+            <p className="text-purple-100">
+              Access admin dashboard
             </p>
           </div>
 
@@ -118,31 +118,31 @@ export const LoginForm: React.FC = () => {
 
             <div className="space-y-4">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-100" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-100" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="pl-10 w-full bg-white/10 border border-white/20 text-white placeholder-emerald-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent backdrop-blur-sm"
-                  placeholder="Email Address"
+                  className="pl-10 w-full bg-white/10 border border-white/20 text-white placeholder-purple-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Admin Email"
                 />
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-100" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-100" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  className="pl-10 w-full bg-white/10 border border-white/20 text-white placeholder-emerald-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent backdrop-blur-sm"
+                  className="pl-10 w-full bg-white/10 border border-white/20 text-white placeholder-purple-200 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm"
                   placeholder="Password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-emerald-100 hover:text-emerald-200 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-100 hover:text-purple-200 transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -158,7 +158,7 @@ export const LoginForm: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="relative w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg py-2.5 px-4 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+              className="relative w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg py-2.5 px-4 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
             >
               <span className="relative z-10 flex items-center justify-center">
                 {loading ? (
@@ -170,19 +170,16 @@ export const LoginForm: React.FC = () => {
                     Processing...
                   </span>
                 ) : (
-                  'Sign In'
+                  'Sign In as Admin'
                 )}
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
 
-            <div className="text-center mt-4 space-y-2">
-              <Link to="/signup" className="block text-emerald-200 hover:text-white transition-colors">
-                Don't have an account? Sign up
-              </Link>
-              <Link to="/admin/login" className="block text-emerald-200 hover:text-white transition-colors">
-                Admin? Sign in here
-              </Link>
+            <div className="text-center mt-4">
+              <a href="/login" className="text-purple-200 hover:text-white transition-colors">
+                Regular user? Sign in here
+              </a>
             </div>
           </form>
         </div>
