@@ -58,26 +58,22 @@ class AuthService implements AuthMethods {
 
     this.api = axios.create({
       baseURL: this.baseURL,
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json'
-      },
-      withCredentials: true
+      }
     });
 
     // Add request interceptor for debugging
     this.api.interceptors.request.use((config) => {
-      // Add CORS headers
-      config.headers['Access-Control-Allow-Origin'] = '*';
-      config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS';
-      config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-      
       if (this.debug) {
         console.log('🚀 Auth Request:', {
           method: config.method,
           url: config.url,
           data: config.data,
           headers: config.headers,
-          baseURL: config.baseURL
+          baseURL: config.baseURL,
+          withCredentials: config.withCredentials
         });
       }
       return config;
