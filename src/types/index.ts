@@ -120,5 +120,57 @@ export interface SystemLog {
 export interface User {
   id: string;
   email: string;
+  name: string;
   role: string;
+  is_active: boolean;
+  created_at: string;
+  last_login: string | null;
+  preferences: Record<string, any>;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData extends LoginCredentials {
+  name: string;
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  message: string;
+  errors?: Record<string, string[]>;
+}
+
+export interface ApiSuccessResponse<T> {
+  status: number;
+  data: T;
+  message?: string;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  lastActivity: string | null;
+}
+
+export interface ChatState {
+  messages: Message[];
+  isLoading: boolean;
+  error: string | null;
+  selectedCategory: string | null;
+  solution?: Message;
 }

@@ -1,21 +1,11 @@
 import { create } from 'zustand';
-
-export interface AppUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  is_active: boolean;
-  created_at: string;
-  last_login: string | null;
-  preferences: Record<string, any>;
-}
+import { User } from '../types';
 
 export interface AppState {
-  user: AppUser | null;
+  user: User | null;
   isAuthenticated: boolean;
   lastActivity: Date | null;
-  setUser: (user: AppUser) => void;
+  setUser: (user: User) => void;
   clearUser: () => void;
   updateLastActivity: () => void;
 }
@@ -24,7 +14,10 @@ export const useAppStore = create<AppState>((set) => ({
   user: null,
   isAuthenticated: false,
   lastActivity: null,
-  setUser: (user: AppUser) => set({ user, isAuthenticated: true }),
+  setUser: (user: User) => set({ user, isAuthenticated: true }),
   clearUser: () => set({ user: null, isAuthenticated: false }),
   updateLastActivity: () => set({ lastActivity: new Date() }),
 }));
+
+// Re-export User type for convenience
+export type { User };
