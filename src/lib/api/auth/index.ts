@@ -1,5 +1,4 @@
-import axios, { AxiosResponse, AxiosInstance, AxiosError } from 'axios';
-import { config } from '../../../config';
+import axios, { AxiosResponse, AxiosInstance } from 'axios';
 
 // Types
 export interface LoginCredentials {
@@ -43,20 +42,21 @@ export interface IAuthService {
 class AuthService implements AuthMethods {
   private readonly api: AxiosInstance;
   private readonly debug: boolean;
+  private readonly baseURL: string;
 
   constructor() {
     this.debug = import.meta.env.DEV || import.meta.env.VITE_DEBUG === 'true';
+    this.baseURL = import.meta.env.VITE_API_URL;
     
     // Log API configuration
     if (this.debug) {
       console.log('🔧 Auth Service Configuration:', {
-        apiUrl: import.meta.env.VITE_API_URL,
-        baseURL: `${import.meta.env.VITE_API_URL}/api/v1`
+        baseURL: this.baseURL
       });
     }
 
     this.api = axios.create({
-      baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
+      baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -69,7 +69,8 @@ class AuthService implements AuthMethods {
           method: config.method,
           url: config.url,
           data: config.data,
-          headers: config.headers
+          headers: config.headers,
+          baseURL: config.baseURL
         });
       }
       return config;
@@ -96,6 +97,7 @@ class AuthService implements AuthMethods {
             config: {
               method: error.config?.method,
               url: error.config?.url,
+              baseURL: error.config?.baseURL,
               data: error.config?.data
             }
           });
@@ -128,6 +130,10 @@ class AuthService implements AuthMethods {
         });
       }
       
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+      }
+      
       return response;
     } catch (error) {
       console.error('🚫 Login failed:', error);
@@ -152,6 +158,10 @@ class AuthService implements AuthMethods {
           userId: response.data.user.id,
           role: response.data.user.role
         });
+      }
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
       }
       
       return response;
@@ -182,6 +192,10 @@ class AuthService implements AuthMethods {
           userId: response.data.user.id,
           role: response.data.user.role
         });
+      }
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
       }
       
       return response;
