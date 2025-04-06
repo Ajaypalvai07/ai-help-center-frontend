@@ -191,7 +191,7 @@ export const SignupForm: React.FC = () => {
             </motion.button>
 
             <div className="text-center mt-4 space-y-2">
-              <Link to="auth/login" className="block text-emerald-200 hover:text-white transition-colors">
+              <Link to="/auth/login" className="block text-emerald-200 hover:text-white transition-colors">
                 Already have an account? Sign in
               </Link>
               <Link to="/admin/login" className="block text-emerald-200 hover:text-white transition-colors">

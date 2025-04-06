@@ -198,34 +198,41 @@ export default function HomePage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate('/auth/login')}
-                  className="px-4 py-2 text-gray-300 hover:text-blue-400 transition-colors"
+                  className="text-gray-300 hover:text-blue-400 px-4 py-2 rounded-md transition-colors"
                 >
-                  Login
+                  Sign In
                 </motion.button>
-                
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate('/auth/signup')}
-                  className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-colors"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Sign Up
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/admin/login')}
+                  className="text-gray-300 hover:text-blue-400 px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+                >
+                  <Lock className="h-4 w-4" />
+                  Admin
                 </motion.button>
               </div>
 
               {/* Mobile Menu Button */}
               <div className="md:hidden">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={toggleMobileMenu}
-                  className="p-2 text-gray-300 hover:text-blue-400 transition-colors"
+                  className="text-gray-300 hover:text-blue-400 p-2"
                 >
                   {isMobileMenuOpen ? (
                     <X className="h-6 w-6" />
                   ) : (
                     <Menu className="h-6 w-6" />
                   )}
-                </motion.button>
+                </button>
               </div>
             </div>
           </div>
@@ -239,59 +246,73 @@ export default function HomePage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="md:hidden bg-gray-800"
               >
-                <div className="px-4 py-2 space-y-1">
-                  {navItems.map((item) => (
-                    <div key={item.label} className="py-2">
-                      <button
-                        onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-gray-300 hover:text-blue-400 transition-colors"
-                      >
-                        <span>{item.label}</span>
-                        <ChevronDown
-                          className={`h-4 w-4 transform transition-transform ${
-                            activeDropdown === item.label ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </button>
-                      
-                      <AnimatePresence>
-                        {activeDropdown === item.label && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="pl-4 space-y-1"
-                          >
-                            {item.items.map((subItem) => (
-                              <a
-                                key={subItem.label}
-                                href={subItem.href}
-                                className="block px-3 py-2 text-sm text-gray-400 hover:text-blue-400 transition-colors"
-                              >
-                                {subItem.label}
-                              </a>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-
-                  {/* Mobile Auth Buttons */}
-                  <div className="pt-4 pb-2 border-t border-gray-700">
+                {navItems.map((item) => (
+                  <div key={item.label} className="px-4 py-2">
                     <button
-                      onClick={() => navigate('/auth/login')}
-                      className="w-full px-3 py-2 text-gray-300 hover:text-blue-400 transition-colors text-left"
+                      onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
+                      className="w-full flex items-center justify-between text-gray-300 hover:text-blue-400 py-2"
                     >
-                      Login
+                      <span>{item.label}</span>
+                      <ChevronDown
+                        className={`h-4 w-4 transform transition-transform ${
+                          activeDropdown === item.label ? 'rotate-180' : ''
+                        }`}
+                      />
                     </button>
-                    <button
-                      onClick={() => navigate('/auth/signup')}
-                      className="w-full mt-2 px-3 py-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-colors text-left"
-                    >
-                      Sign Up
-                    </button>
+                    
+                    <AnimatePresence>
+                      {activeDropdown === item.label && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="pl-4 space-y-2"
+                        >
+                          {item.items.map((subItem) => (
+                            <a
+                              key={subItem.label}
+                              href={subItem.href}
+                              className="block py-2 text-sm text-gray-400 hover:text-blue-400"
+                            >
+                              {subItem.label}
+                            </a>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+                ))}
+
+                {/* Mobile Auth Buttons */}
+                <div className="px-4 py-4 space-y-2 border-t border-gray-700">
+                  <button
+                    onClick={() => {
+                      navigate('/auth/login');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left text-gray-300 hover:text-blue-400 py-2"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/auth/signup');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left text-gray-300 hover:text-blue-400 py-2"
+                  >
+                    Sign Up
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin/login');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left text-gray-300 hover:text-blue-400 py-2 flex items-center gap-2"
+                  >
+                    <Lock className="h-4 w-4" />
+                    Admin Login
+                  </button>
                 </div>
               </motion.div>
             )}

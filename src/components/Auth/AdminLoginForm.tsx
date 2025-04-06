@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { auth } from '../../lib/api/auth';
 import { useAppStore } from '../../store/useStore';
@@ -177,9 +177,9 @@ export const AdminLoginForm: React.FC = () => {
             </motion.button>
 
             <div className="text-center mt-4">
-              <a href="auth/login" className="text-purple-200 hover:text-white transition-colors">
+              <Link to="/auth/login" className="text-purple-200 hover:text-white transition-colors">
                 Regular user? Sign in here
-              </a>
+              </Link>
             </div>
           </form>
         </div>
