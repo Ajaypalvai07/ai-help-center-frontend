@@ -45,10 +45,9 @@ class AuthService implements AuthMethods {
   private readonly baseURL: string;
 
   constructor() {
-    this.debug = import.meta.env.DEV || import.meta.env.VITE_DEBUG === 'true';
+    this.debug = import.meta.env.VITE_DEBUG === 'true';
     this.baseURL = import.meta.env.VITE_API_URL;
-    
-    // Log API configuration
+
     if (this.debug) {
       console.log('🔧 Auth Service Configuration:', {
         baseURL: this.baseURL,
@@ -93,12 +92,14 @@ class AuthService implements AuthMethods {
       },
       (error) => {
         if (this.debug) {
-          console.error('❌ Auth Error:', {
+          console.error('🚫 Auth Error:', {
             message: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            config: {
-              method: error.config?.method,
+            response: {
+              status: error.response?.status,
+              data: error.response?.data,
+              headers: error.response?.headers
+            },
+            request: {
               url: error.config?.url,
               baseURL: error.config?.baseURL,
               data: error.config?.data,
@@ -119,31 +120,27 @@ class AuthService implements AuthMethods {
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
     if (this.debug) {
-      console.log('📝 Login attempt:', { email });
+      console.log('🔑 Login attempt:', { email });
     }
-    
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
 
     try {
-      const response = await this.api.post('/auth/token', formData, {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-      
+
       if (this.debug) {
-        console.log('🔑 Login successful:', {
+        console.log('✅ Login successful:', {
           userId: response.data.user.id,
           role: response.data.user.role
         });
       }
-      
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-      }
-      
+
       return response;
     } catch (error) {
       console.error('🚫 Login failed:', error);
