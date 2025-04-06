@@ -425,18 +425,22 @@ export default function HomePage() {
                   </motion.a>
                 </div>
 
-                <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div className="p-4 bg-gray-700/50 rounded-lg">
                     <div className="text-2xl font-bold text-white">Fresher</div>
                     <div className="text-gray-400">Experience Level</div>
                   </div>
                   <div className="p-4 bg-gray-700/50 rounded-lg">
-                    <div className="text-lg font-bold text-white">Crypto Investment Website</div>
+                    <div className="text-base sm:text-lg font-bold text-white">Crypto Investment Website</div>
                     <div className="text-gray-400">Project 1</div>
                   </div>
                   <div className="p-4 bg-gray-700/50 rounded-lg">
-                    <div className="text-lg font-bold text-white">AI Help Centre</div>
+                    <div className="text-base sm:text-lg font-bold text-white">AI Help Centre</div>
                     <div className="text-gray-400">Project 2</div>
+                  </div>
+                  <div className="p-4 bg-gray-700/50 rounded-lg">
+                    <div className="text-base sm:text-lg font-bold text-white">Smart Resume Analyzer</div>
+                    <div className="text-gray-400">NLP-based Project</div>
                   </div>
                 </div>
               </div>
