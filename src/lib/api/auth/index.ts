@@ -42,8 +42,10 @@ export interface IAuthService {
 // Implement the auth service
 class AuthService implements AuthMethods {
   private readonly api: AxiosInstance;
+  private readonly debug: boolean;
 
   constructor() {
+    this.debug = import.meta.env.MODE === 'development';
     this.api = axios.create({
       baseURL: config.apiUrl,
       timeout: 10000,
@@ -60,11 +62,29 @@ class AuthService implements AuthMethods {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-        console.log('Making request to:', config.url, config);
+        if (this.debug) {
+          console.log('🚀 API Request:', {
+            method: config.method?.toUpperCase(),
+            url: config.url,
+            data: config.data,
+            headers: config.headers,
+          });
+        }
         return config;
       },
       (error) => {
-        console.error('Request error:', error);
+        if (this.debug) {
+          console.error('❌ API Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+              method: error.config?.method?.toUpperCase(),
+              url: error.config?.url,
+              data: error.config?.data,
+            },
+          });
+        }
         return Promise.reject(error);
       }
     );
@@ -76,10 +96,27 @@ class AuthService implements AuthMethods {
           localStorage.removeItem('token');
           window.location.href = '/auth/login';
         }
+        if (this.debug) {
+          console.log('✅ API Response:', {
+            status: response.status,
+            data: response.data,
+          });
+        }
         return response;
       },
       (error: AxiosError) => {
-        console.error('Auth API Error:', error);
+        if (this.debug) {
+          console.error('🚫 API Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+              method: error.config?.method?.toUpperCase(),
+              url: error.config?.url,
+              data: error.config?.data,
+            },
+          });
+        }
         if (error.response?.status === 500) {
           return Promise.reject({
             status: 500,
@@ -98,7 +135,8 @@ class AuthService implements AuthMethods {
 
   async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
     try {
-      console.log('Attempting login with:', { email });
+      if (this.debug) console.log('📝 Login attempt:', { email });
+      
       const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
@@ -109,23 +147,26 @@ class AuthService implements AuthMethods {
         }
       });
 
+      if (this.debug) console.log('🔑 Login successful:', { user: response.data.user });
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
       }
-
       return response;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
+      if (this.debug) {
+        console.error('🚫 Login failed:', {
+          error: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+      }
       throw error;
     }
   }
 
   async register(email: string, password: string, name: string): Promise<AxiosResponse<AuthResponse>> {
     try {
-      console.log('Sending registration request:', {
-        url: `${config.apiUrl}/auth/register`,
-        data: { email, password: '***', name, is_active: true, role: 'user' }
-      });
+      if (this.debug) console.log('📝 Registration attempt:', { email, name });
 
       const response = await this.api.post<AuthResponse>('/auth/register', {
         email,
@@ -135,50 +176,66 @@ class AuthService implements AuthMethods {
         role: 'user'
       });
 
+      if (this.debug) console.log('✨ Registration successful:', { user: response.data.user });
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
       }
-
       return response;
-    } catch (error) {
-      console.error('Registration error:', error);
+    } catch (error: any) {
+      if (this.debug) {
+        console.error('🚫 Registration failed:', {
+          error: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+      }
       throw error;
     }
   }
 
   async adminLogin(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
     try {
-      console.log('Attempting admin login with:', { email });
+      if (this.debug) console.log('👑 Admin login attempt:', { email });
+
       const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await this.api.post<AuthResponse>('/auth/token', formData, {
+      const response = await this.api.post<AuthResponse>('/auth/admin/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
 
+      if (this.debug) console.log('👑 Admin login successful:', { user: response.data.user });
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
       }
-
       if (response.data.user.role !== 'admin') {
         throw new Error('User is not an admin');
       }
-
       return response;
-    } catch (error) {
-      console.error('Admin login error:', error);
+    } catch (error: any) {
+      if (this.debug) {
+        console.error('🚫 Admin login failed:', {
+          error: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+      }
       throw error;
     }
   }
 
   async verify(): Promise<AxiosResponse<{ user: AuthResponse['user'] }>> {
-    return this.api.get('/auth/verify');
+    const token = localStorage.getItem('token');
+    return this.api.get('/auth/verify', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
   }
 
   async logout(): Promise<void> {
+    if (this.debug) console.log('👋 Logging out');
     localStorage.removeItem('token');
   }
 }
