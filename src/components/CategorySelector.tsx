@@ -11,7 +11,15 @@ export default function CategorySelector() {
   const loadCategories = async () => {
     try {
       const response = await categories.getAll();
-      setAllCategories(response.data);
+      const categoriesWithDefaults = response.data.map((cat: Partial<Category>) => ({
+        id: cat.id || '',
+        name: cat.name || '',
+        description: cat.description || '',
+        icon: cat.icon || 'help-circle',
+        order: cat.order || 0,
+        is_active: cat.is_active ?? true
+      }));
+      setAllCategories(categoriesWithDefaults);
     } catch (err) {
       console.error('Error loading categories:', err);
       setError('Failed to load categories');

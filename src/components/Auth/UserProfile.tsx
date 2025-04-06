@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Avatar } from '@mui/material';
-import { useAppStore } from '../store/useStore';
-import { useAuth } from '../hooks/useAuth';
+import { useAppStore } from '../../store/useStore';
+import { useAuth } from '../../hooks/useAuth';
 
 export const UserProfile: React.FC = () => {
   const { user } = useAppStore();
@@ -32,7 +32,7 @@ export const UserProfile: React.FC = () => {
       </Typography>
       
       <Typography variant="body2" color="text.secondary">
-        Member since: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+        Member since: {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
       </Typography>
       
       <Button

@@ -19,17 +19,18 @@ export function useAIChat() {
         throw new Error('No response data received');
       }
 
-      const message: Message = {
-        id: crypto.randomUUID(),
-        content: response.data.message.content,
+      const newMessage: Message = {
+        id: response.data.id,
+        content: response.data.message?.content || response.data.content,
+        user_id: 'assistant',
+        category: category || 'general',
+        type: response.data.message?.type || 'text',
         role: 'assistant',
         timestamp: new Date().toISOString(),
-        type: response.data.message.type || 'text',
-        category: category,
-        userId: user?.id
+        confidence: response.data.confidence
       };
 
-      return message;
+      return newMessage;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get AI response';
       setError(errorMessage);

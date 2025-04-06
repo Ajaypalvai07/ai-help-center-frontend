@@ -1,99 +1,83 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Box, Paper, Typography, TextField, Button, CircularProgress } from '@mui/material';
-import { Message, ChatState } from '../types';
-import { useAppStore } from '../store/useStore';
-import { nanoid } from 'nanoid';
+import { Message } from '../types';
+import { useAppStore } from '../store';
+
+interface ChatState {
+  messages: Message[];
+  isLoading: boolean;
+  error: string | null;
+  selectedCategory: string | null;
+}
 
 const Chat: React.FC = () => {
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAppStore();
-
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
     isLoading: false,
     error: null,
-    selectedCategory: null,
-    solution: undefined
+    selectedCategory: null
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const [input, setInput] = useState('');
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatState.messages]);
-
-  const handleSendMessage = async () => {
-    if (!input.trim() || !user) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || chatState.isLoading) return;
 
     const newMessage: Message = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       content: input.trim(),
       role: 'user',
       timestamp: new Date().toISOString(),
-      userId: user.id
+      user_id: user?.id || 'anonymous',
+      category: chatState.selectedCategory || 'general'
     };
 
-    setChatState(prev => ({
+    setChatState((prev: ChatState) => ({
       ...prev,
-      messages: [...prev.messages, newMessage]
+      messages: [...prev.messages, newMessage],
+      isLoading: true,
+      error: null
     }));
 
     setInput('');
-    setIsLoading(true);
 
     // Simulate AI response
     setTimeout(() => {
       const aiResponse: Message = {
-        id: nanoid(),
+        id: crypto.randomUUID(),
         content: 'This is a simulated AI response.',
         role: 'assistant',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        user_id: 'assistant',
+        category: chatState.selectedCategory || 'general'
       };
 
-      setChatState(prev => ({
+      setChatState((prev: ChatState) => ({
         ...prev,
-        messages: [...prev.messages, aiResponse]
+        messages: [...prev.messages, aiResponse],
+        isLoading: false
       }));
-      setIsLoading(false);
     }, 1000);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          flex: 1, 
-          p: 2, 
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
-        {chatState.messages.map((message) => (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}>
+      <Paper sx={{ flex: 1, mb: 2, p: 2, overflowY: 'auto' }}>
+        {chatState.messages.map((message: Message) => (
           <Box
             key={message.id}
             sx={{
-              alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '70%'
+              display: 'flex',
+              justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+              mb: 2
             }}
           >
             <Paper
-              elevation={1}
               sx={{
                 p: 2,
+                maxWidth: '70%',
                 backgroundColor: message.role === 'user' ? 'primary.light' : 'grey.100'
               }}
             >
@@ -101,26 +85,28 @@ const Chat: React.FC = () => {
             </Paper>
           </Box>
         ))}
-        <div ref={messagesEndRef} />
+        {chatState.isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress />
+          </Box>
+        )}
       </Paper>
 
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box component="form" onSubmit={handleSubmit}>
         <TextField
           fullWidth
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
           placeholder="Type your message..."
-          disabled={isLoading}
-          multiline
-          maxRows={4}
+          disabled={chatState.isLoading}
         />
         <Button
+          type="submit"
           variant="contained"
-          onClick={handleSendMessage}
-          disabled={isLoading || !input.trim()}
+          disabled={!input.trim() || chatState.isLoading}
+          sx={{ mt: 1 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : 'Send'}
+          Send
         </Button>
       </Box>
     </Box>

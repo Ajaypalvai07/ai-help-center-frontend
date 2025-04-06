@@ -2,14 +2,6 @@ import type { Message } from '../../types';
 import api from '../api';
 import { aiService } from './index';
 
-interface FeedbackData {
-  rating: number;
-  comment?: string;
-  messageId: string;
-  resolved?: boolean;
-  feedback?: string;
-}
-
 export interface AnalysisResponse {
   message: Message;
   confidence?: number;
@@ -42,10 +34,14 @@ export const aiLearningEngine = new AILearningEngine();
 
 export async function submitFeedback(message: Message, rating: number, comment?: string) {
   try {
-    const feedbackData: FeedbackData = {
+    if (!message.id) {
+      throw new Error('Message ID is required for feedback');
+    }
+
+    const feedbackData = {
+      messageId: message.id,
       rating,
-      comment,
-      messageId: message.id
+      comment
     };
     
     await api.chat.submitFeedback(message.id, feedbackData);

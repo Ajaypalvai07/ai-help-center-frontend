@@ -6,6 +6,9 @@ export interface Message {
   created_at?: string;
   status?: string;
   confidence?: number;
+  role?: 'user' | 'assistant';
+  timestamp?: string;
+  type?: string;
 }
 
 export interface SimilarCase {
@@ -36,6 +39,10 @@ export interface MessageResponse {
   content: string;
   confidence: number;
   created_at: string;
+  message: {
+    content: string;
+    type?: string;
+  };
 }
 
 export interface Category {
@@ -173,4 +180,19 @@ export interface ChatState {
   error: string | null;
   selectedCategory: string | null;
   solution?: Message;
+}
+
+export interface UploadResponse {
+  id: string;
+  filename: string;
+  url: string;
+  created_at: string;
+}
+
+export interface AnalysisResponse {
+  id: string;
+  content: string;
+  confidence: number;
+  created_at: string;
+  metadata?: Record<string, any>;
 }

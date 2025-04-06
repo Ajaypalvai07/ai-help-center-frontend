@@ -57,7 +57,9 @@ export class AIService {
       role: 'assistant',
       timestamp: new Date().toISOString(),
       confidence,
-      type: 'text'
+      type: 'text',
+      user_id: 'assistant',
+      category: 'general'
     };
   }
 }
